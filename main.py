@@ -46,16 +46,25 @@ def scrape_toolify():
             if isinstance(tools, list):
                 for tool in tools:
                     if isinstance(tool, dict):
+                        # Cắt description xuống 255 ký tự nếu dài hơn
+                        description = tool.get('description', '')
+                        if len(description) > 255:
+                            description = description[:252] + '...'
+                            
                         results.append({
                             "name": tool.get('name', ''),
-                            "description": tool.get('description', ''),
+                            "description": description,
                             "tags": tool.get('tags', []),
                             "link_ai_tool": tool.get('link_ai_tool', '')
                         })
             elif isinstance(tools, dict):
+                description = tools.get('description', '')
+                if len(description) > 255:
+                    description = description[:252] + '...'
+                    
                 results.append({
                     "name": tools.get('name', ''),
-                    "description": tools.get('description', ''),
+                    "description": description,
                     "tags": tools.get('tags', []),
                     "link_ai_tool": tools.get('link_ai_tool', '')
                 })
