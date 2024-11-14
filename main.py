@@ -1,5 +1,7 @@
 import os
 from dotenv import load_dotenv
+import requests
+import json
 
 # Load biến môi trường từ file .env
 load_dotenv()
@@ -22,7 +24,7 @@ def scrape_toolify():
         TOOLS_QUERY = """
         {
           newly_launched {
-            ai_tools {
+            ai_tools[] {
               name
               description 
               tags[]
@@ -33,13 +35,26 @@ def scrape_toolify():
 
         response = page.query_data(TOOLS_QUERY)
         
+        # In ra JSON gốc từ API
+        print("\nDữ liệu JSON gốc từ API:")
+        print(response)
+        print("\n" + "="*50 + "\n")
+        
         if isinstance(response, dict) and 'newly_launched' in response:
-            tool = response['newly_launched']['ai_tools']
-            if isinstance(tool, dict):
+            tools = response['newly_launched']['ai_tools']
+            if isinstance(tools, list):
+                for tool in tools:
+                    if isinstance(tool, dict):
+                        results.append({
+                            "name": tool.get('name', ''),
+                            "description": tool.get('description', ''),
+                            "tags": tool.get('tags', [])
+                        })
+            elif isinstance(tools, dict):
                 results.append({
-                    "name": tool.get('name', ''),
-                    "description": tool.get('description', ''),
-                    "tags": tool.get('tags', [])
+                    "name": tools.get('name', ''),
+                    "description": tools.get('description', ''),
+                    "tags": tools.get('tags', [])
                 })
         
         browser.close()
@@ -47,11 +62,50 @@ def scrape_toolify():
 
 if __name__ == '__main__':
     try:
-        results = scrape_toolify()
-        print("Kết quả thu thập được:")
-        for tool in results:
+        # Lấy danh sách công cụ hiện có từ API
+        existing_tools = set()
+        get_url = "http://localhost:8080/api/newly-launched"
+        get_response = requests.get(get_url)
+        
+        if get_response.status_code == 200:
+            data = get_response.json()
+            for item in data:
+                for tool in item['aiTools']:
+                    existing_tools.add(tool['name'])
+            print(f"Đã tìm thấy {len(existing_tools)} công cụ trong database")
+        
+        # Scrape dữ liệu mới
+        new_results = scrape_toolify()
+        
+        # Lọc bỏ các công cụ đã tồn tại
+        filtered_results = [
+            tool for tool in new_results 
+            if tool['name'] not in existing_tools
+        ]
+        
+        if not filtered_results:
+            print("\nKhông có công cụ mới để thêm vào")
+            exit()
+            
+        print(f"\nTìm thấy {len(filtered_results)} công cụ mới:")
+        for tool in filtered_results:
             print(f"\nTên: {tool['name']}")
             print(f"Mô tả: {tool['description']}")
             print(f"Tags: {', '.join(tool['tags'])}")
+            
+        # Gửi chỉ những công cụ mới đến API
+        post_url = "http://localhost:8080/api/newly-launched"
+        data = {
+            "aiTools": filtered_results
+        }
+        
+        headers = {'Content-Type': 'application/json'}
+        post_response = requests.post(post_url, json=data, headers=headers)
+        
+        if post_response.status_code == 200:
+            print(f"\nĐã thêm thành công {len(filtered_results)} công cụ mới:", post_response.json())
+        else:
+            print("\nLỗi khi gửi đến API:", post_response.status_code)
+            
     except Exception as e:
         print(f"Có lỗi xảy ra: {str(e)}")
