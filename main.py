@@ -23,13 +23,14 @@ def scrape_toolify():
 
         TOOLS_QUERY = """
         {
-          newly_launched {
-            ai_tools[] {
-              name
-              description 
-              tags[]
+            newly_launched {
+                ai_tools[] {
+                    name
+                    link_ai_tool
+                    description 
+                    tags[]
+                }
             }
-          }
         }
         """
 
@@ -48,13 +49,15 @@ def scrape_toolify():
                         results.append({
                             "name": tool.get('name', ''),
                             "description": tool.get('description', ''),
-                            "tags": tool.get('tags', [])
+                            "tags": tool.get('tags', []),
+                            "link_ai_tool": tool.get('link_ai_tool', '')
                         })
             elif isinstance(tools, dict):
                 results.append({
                     "name": tools.get('name', ''),
                     "description": tools.get('description', ''),
-                    "tags": tools.get('tags', [])
+                    "tags": tools.get('tags', []),
+                    "link_ai_tool": tools.get('link_ai_tool', '')
                 })
         
         browser.close()
@@ -92,6 +95,7 @@ if __name__ == '__main__':
             print(f"\nTên: {tool['name']}")
             print(f"Mô tả: {tool['description']}")
             print(f"Tags: {', '.join(tool['tags'])}")
+            print(f"Link: {tool['link_ai_tool']}")
             
         # Gửi chỉ những công cụ mới đến API
         post_url = "https://showaisb.onrender.com/api/newly-launched"
@@ -99,8 +103,14 @@ if __name__ == '__main__':
             "aiTools": filtered_results
         }
         
-        headers = {'Content-Type': 'application/json'}
-        post_response = requests.post(post_url, json=data, headers=headers)
+        headers = {
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+        post_response = requests.post(
+            post_url, 
+            data=json.dumps(data, ensure_ascii=False).encode('utf-8'), 
+            headers=headers
+        )
         
         if post_response.status_code == 200:
             print(f"\nĐã thêm thành công {len(filtered_results)} công cụ mới:", post_response.json())
