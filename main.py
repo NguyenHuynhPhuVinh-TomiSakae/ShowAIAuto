@@ -64,7 +64,7 @@ if __name__ == '__main__':
     try:
         # Lấy danh sách công cụ hiện có từ API
         existing_tools = set()
-        get_url = "http://localhost:8080/api/newly-launched"
+        get_url = "https://showaisb.onrender.com/api/newly-launched"
         get_response = requests.get(get_url)
         
         if get_response.status_code == 200:
@@ -94,7 +94,7 @@ if __name__ == '__main__':
             print(f"Tags: {', '.join(tool['tags'])}")
             
         # Gửi chỉ những công cụ mới đến API
-        post_url = "http://localhost:8080/api/newly-launched"
+        post_url = "https://showaisb.onrender.com/api/newly-launched"
         data = {
             "aiTools": filtered_results
         }
