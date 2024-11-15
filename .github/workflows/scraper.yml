@@ -23,7 +23,12 @@ jobs:
           pip install -r requirements.txt
           playwright install chromium
 
-      - name: Run scraper
+      - name: Run main scraper
         env:
           AGENTQL_API_KEY: ${{ secrets.AGENTQL_API_KEY }}
         run: python main.py
+
+      - name: Run rust scraper
+        env:
+          AGENTQL_API_KEY: ${{ secrets.AGENTQL_API_KEY }}
+        run: python rust.py
