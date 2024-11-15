@@ -76,7 +76,7 @@ if __name__ == '__main__':
     try:
         # Lấy danh sách công cụ hiện có từ API
         existing_tools = set()
-        get_url = "https://showaisb.onrender.com/api/newly-launched"
+        get_url = "https://showaisb.onrender.com/api/newly-launched/all"
         get_response = requests.get(get_url)
         
         if get_response.status_code == 200:
